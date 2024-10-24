@@ -1,0 +1,9 @@
+basePath: /
+host: localhost:8080
+info:
+  contact: {}
+  description: This is the API for ZGDrive file management system.
+  title: ZGDrive API
+  version: "1.0"
+paths: {}
+swagger: "2.0"

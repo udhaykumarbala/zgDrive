@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+  <link rel="stylesheet" href="./output.css">
+  <title>ZG Drive</title>
+</head>
+
+<body class="bg-gray-50 backdrop-blur-xl">
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <!-- <aside class="w-64 bg-white border-r">
+      <nav class="p-4">
+        <ul class="space-y-2">
+          <li>
+            <a href="#"
+              class="flex items-center space-x-2 text-gray-700 text-lg font-semibold hover:text-blue-600 hover:bg-gray-100 rounded p-2">
+              <i class="ri-folder-line"></i>
+              <span>My Files</span>
+            </a>
+          </li>
+          <li>
+            <a href="#"
+              class="flex items-center space-x-2 text-lg font-semibold hover:text-blue-600 text-gray-700 hover:bg-gray-100 rounded p-2">
+              <i class="ri-cloud-line"></i>
+              <span>Cloud Storage</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </aside> -->
+
+    <main class="flex-1 flex flex-col">
+      <header class="bg-white border-b">
+        <div class="flex flex-col">
+          <h1 class="p-4 font-semibold text-xl text-center py-2">ZGDrive</h1>
+        <div class="flex mx-auto">
+          <div class="flex max-w-xs gap-4 py-2 px-4">
+            <button id="cloudTab"
+              class="flex-1 py-2 px-10 text-center font-medium bg-gray-100 text-blue-600 border hover:bg-gray-100 hover:text-blue-600 border-blue-300 rounded-md ">Cloud</button>
+            <button id="localTab"
+              class="flex-1 py-2 px-10 text-center font-medium text-gray-600 border hover:bg-gray-100 hover:text-blue-600 rounded-md">Local</button>
+          </div>
+        </div>
+      </div>
+      </header>
+
+      <div class="flex-1 p-6 overflow-auto relative">
+        <div id="fileGrid" class="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-6 gap-4">
+
+        </div>
+
+        <!-- <div class="grid grid-cols-1  lg:grid-cols-6 gap-4 mt-4">
+          <div class="h-40 flex items-end w-full border-2  rounded-md bg-blue-50/80 backdrop-blur -z-10">
+            <div class="bg-white p-4 rounded shadow flex flex-col w-full gap-2">
+              <div class="flex justify-between w-full">
+                <div class="flex items-center space-x-2">
+                  <i class="ri-file-text-line text-blue-500"></i>
+                  <span class="font-medium">Test - 01</span>
+                </div>
+
+                <div class="flex flex-col items-center space-x-2">
+                  <div class="flex items-center gap-4">
+                    <span class="text-sm text-gray-500">filesize</span>
+                    <button class="text-blue-600 hover:text-blue-800">
+                      <i class="ri-download-line"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <span class="text-sm ${file.is_downloaded ? 'text-green-500' : 'text-yellow-500'}">
+                Downloaded
+              </span>
+            </div>
+          </div>
+        </div> -->
+
+
+
+        <div id="downloadQueueCard"
+          class="absolute bottom-4 right-4 w-80 bg-white rounded-lg shadow-lg overflow-hidden border-2 border-blue-200">
+          <div
+            class="bg-blue-100/50 text-blue-600 px-4 py-2 font-semibold flex justify-between  rounded-lg items-center">
+            <span>Download Queue</span>
+            <button id="toggleQueueBtn" class="text-blue-600 hover:bg-blue-200/70 rounded-full p-1 px-2 ">
+              <i class="ri-arrow-down-s-line "></i>
+            </button>
+          </div>
+          <div id="queueContent" class="max-h-60 overflow-y-auto">
+          </div>
+        </div>
+      </div>
+
+      <footer class="bg-white border-t p-4">
+        <div class="flex items-center justify-between">
+          <label
+            class="flex items-center space-x-2 cursor-pointer bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
+            <i class="ri-upload-line"></i>
+            <span>Upload File</span>
+            <input type="file" class="hidden" id="fileUpload" single>
+          </label>
+          <div id="queueStatus" class="text-sm text-gray-600">
+            No downloads in progress
+          </div>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+
+  <script>
+    const cloudTab = document.getElementById('cloudTab');
+    const localTab = document.getElementById('localTab');
+    const fileGrid = document.getElementById('fileGrid');
+    const fileUpload = document.getElementById('fileUpload');
+    const queueStatus = document.getElementById('queueStatus');
+    const downloadQueueCard = document.getElementById('downloadQueueCard');
+    const toggleQueueBtn = document.getElementById('toggleQueueBtn');
+    const queueContent = document.getElementById('queueContent');
+
+    let cloudData = [
+      {
+        "id": 3,
+        "filename": "hello6.txt",
+        "hash": "0x53838caf2513e21477cc86f6c4f2705db0342d03c5efabd184e06b3f3ba99de6",
+        "size": 7,
+        "size_readable": "7 B",
+        "tx_id": "0xf51bdc804319d7f03fcb3ea611b5b3188e8bec7eafcbd62bfef3eb99186e4cd8",
+        "is_uploaded": true,
+        "created_at": "2024-10-19T08:50:09Z"
+      },
+      {
+        "id": 2,
+        "filename": "hello5.txt",
+        "hash": "0x2fe0228ed8c837057955bc7ef208b4b207d51006d4c016640c257de06a970312",
+        "size": 12,
+        "size_readable": "12 B",
+        "tx_id": "0xa1283319fdd98f18d7f3f87cd6a94620ce3ebee9b5954f45e28fd8c41d4abc11",
+        "is_uploaded": true,
+        "created_at": "2024-10-19T08:03:33Z"
+      },
+      {
+        "id": 1,
+        "filename": "hello4.txt",
+        "hash": "0xb5b196be6ab156838048c5ee26c96428997cf3203f92954a22702ed9af3cc4cb",
+        "size": 10,
+        "size_readable": "10 B",
+        "tx_id": "0xdcace8122c4ab99448ddec64d469bc898022c57b1f3eee01cee901d3dc4d9552",
+        "is_uploaded": true,
+        "created_at": "2024-10-19T07:51:43Z"
+      }
+    ];
+
+    let localData = [
+      {
+        "file_id": 2,
+        "filename": "hello4.txt",
+        "hash": "0xb5b196be6ab156838048c5ee26c96428997cf3203f92954a22702ed9af3cc4cb",
+        "size": 10,
+        "size_readable": "",
+        "is_downloaded": false,
+        "downloaded_at": "0001-01-01T00:00:00Z"
+      },
+      {
+        "file_id": 12,
+        "filename": "hello6.txt",
+        "hash": "0x53838caf2513e21477cc86f6c4f2705db0342d03c5efabd184e06b3f3ba99de6",
+        "size": 7,
+        "size_readable": "",
+        "is_downloaded": true,
+        "downloaded_at": "2024-01-01T00:00:00Z"
+      }
+    ];
+
+    let currentTab = 'cloud';
+    let downloadQueue = [];
+
+    function getCloudList() {
+      fetch('http://localhost:8080/list', {
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+        .then(res => res.json())
+        .then(data => {
+          cloudData = data;
+          updateFileGrid();
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function getLocalList() {
+      fetch('http://localhost:8080/downloaded', {
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+        .then(res => res.json())
+        .then(data => {
+          localData = data;
+          updateFileGrid();
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function updateFileGrid() {
+      fileGrid.innerHTML = '';
+      const data = currentTab === 'cloud' ? cloudData : localData;
+      data.forEach(file => {
+        const fileElement = document.createElement('div');
+        fileElement.className = 'h-40 flex items-end w-full border-2  rounded-md bg-blue-50/80';
+        fileElement.innerHTML = `
+                     <div class="bg-white p-4 rounded shadow flex flex-col w-full gap-2">
+          <div class="flex justify-between w-full">
+            <div class="flex items-center space-x-2">
+              <i class="ri-file-text-line text-blue-500"></i>
+              <span class="font-medium">${file.filename}</span>
+            </div>
+
+            <div class="flex flex-col items-center space-x-2">
+              <div class="flex items-center gap-4">
+                <span class="text-sm text-gray-500">${file.size_readable || `${file.size} B`}</span>
+                        ${currentTab === 'cloud'
+            ? `<button class="text-blue-600 hover:text-blue-800 hover:cursor-pointer" data-isuploaded="${file.is_uploaded}" onclick="addToDownloadQueue(${file.id})">
+                    <i class="ri-download-line"></i>
+                </button>`
+            : `<button class="text-blue-600 hover:text-blue-800 hover:cursor-pointer" data-isdownloading="${file.is_downloading}" onclick="downloadFile(${file.file_id}, '${file.filename}') ">
+                  <i class="ri-download-line"></i>
+                </button>`}
+              </div>
+            </div>
+          </div>
+
+          ${currentTab === 'local' ?
+            `<span class="text-sm ${file.is_downloading ? 'text-yellow-500' : 'text-green-500'}">
+                                ${file.is_downloading ? 'Downloading...' : 'Downloaded'}
+                               </span>` : ""}
+          ${currentTab === 'cloud' ?
+            `<span class="text-sm ${file.is_uploaded ? 'text-green-500' : 'text-yellow-500'}">
+                                ${file.is_uploaded ? 'Uploaded' : 'Uploading...'}
+                               </span>` : ""}
+        </div>
+                `;
+        fileGrid.appendChild(fileElement);
+      });
+
+
+    }
+
+    function getDownloadStatus(fileId) {
+      let isDone = false;
+      isDone = fetch(`http://localhost:8080/downloadStatus/${fileId}`, {
+        method: 'GET',
+      })
+        .then(res => res.json())
+        .then(data => {
+          isDone = data.status;
+          return isDone;
+        });
+      return isDone;
+    }
+
+    function addToDownloadQueue(fileId) {
+      console.log("start download");
+
+      const file = cloudData.find(f => f.id === fileId);
+        downloadQueue.push({ ...file, progress: 0 });
+        updateQueueStatus();
+        updateDownloadQueue();
+        fetch(`http://localhost:8080/download/${fileId}`, {
+          method: 'GET',
+        })
+          .then(res => res.json())
+          .then(data => {
+            console.log(data);
+            if (data.status === 'downloaded') {
+            downloadQueue.forEach(f => {
+              if (f.id === data.fileId) {
+                f.progress = 100;
+                }
+                console.log(f);
+              });
+            } else if (data.status === 'error') {
+              downloadQueue = downloadQueue.filter(f => f.id !== data.fileId);
+            } else if (data.status === 'downloading') {
+              downloadQueue.forEach(f => {
+                if (f.id === data.fileId) {
+                  f.progress = 50;
+                }
+              });
+              checkStatus = setInterval(() => {
+                isDone = getDownloadStatus(data.fileId);
+                console.log(isDone);
+                if (isDone) {
+                  downloadQueue.forEach(f => {
+                    if (f.id === data.fileId) {
+                      f.progress = 100;
+                      updateDownloadQueue();
+                      getLocalList();
+                    }
+                  });
+                  clearInterval(checkStatus);
+                }
+              }, 8000);
+            }
+            updateDownloadQueue();
+          })
+          .catch(error => console.error('Error:', error));
+    }
+
+    function downloadFile(fileId, filename) {
+      fetch(`http://localhost:8080/downloaded/${fileId}`, {
+        method: 'GET',
+      })
+        .then(res => {
+          // save file
+          const blob = new Blob([res], { type: 'application/octet-stream' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          a.click();
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function updateQueueStatus() {
+      queueStatus.textContent = downloadQueue.length > 0
+        ? `${downloadQueue.length} file(s) in download queue`
+        : 'No downloads in progress';
+    }
+
+    function updateDownloadQueue() {
+      queueContent.innerHTML = '';
+      downloadQueue.forEach(file => {
+        const queueItem = document.createElement('div');
+        queueItem.className = 'p-2 border-b';
+        queueItem.innerHTML = `
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-sm font-medium">${file.filename}</span>
+                        <span class="text-xs text-gray-500">${file.progress}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div class="bg-blue-600 h-2.5 rounded-full" style="width: ${file.progress}%"></div>
+                    </div>
+                `;
+        queueContent.appendChild(queueItem);
+      });
+    }
+
+    cloudTab.addEventListener('click', () => {
+      currentTab = 'cloud';
+      cloudTab.classList.add('bg-gray-100', 'text-blue-600', "border-blue-300");
+      cloudTab.classList.remove('text-gray-600');
+      localTab.classList.remove('bg-gray-100', 'text-blue-600', "border-blue-300");
+      localTab.classList.add('text-gray-600');
+      getCloudList();
+    });
+
+    localTab.addEventListener('click', () => {
+      currentTab = 'local';
+      localTab.classList.add('bg-gray-100', 'text-blue-600', "border-blue-300");
+      localTab.classList.remove('text-gray-600');
+      cloudTab.classList.remove('bg-gray-100', 'text-blue-600', "border-blue-300");
+      cloudTab.classList.add('text-gray-600');
+      getLocalList();
+    });
+
+    function uploadFile(file) {
+      const formData = new FormData();
+      formData.append('file', file);
+      fetch('http://localhost:8080/upload', {
+        method: 'POST',
+        body: formData,
+      })
+        .then(res => res.json())
+        .then(data => {
+          getCloudList();
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    fileUpload.addEventListener('change', (event) => {
+      const newFile = Array.from(event.target.files)[0];
+      if (newFile) {
+        uploadFile(newFile);
+      }
+    });
+
+    toggleQueueBtn.addEventListener('click', () => {
+      queueContent.classList.toggle('hidden');
+      toggleQueueBtn.innerHTML = queueContent.classList.contains('hidden')
+        ? '<i class="ri-arrow-up-s-line"></i>'
+        : '<i class="ri-arrow-down-s-line"></i>';
+    });
+
+    // setInterval(() => {
+    //   downloadQueue.forEach(file => {
+    //     if (file.progress < 100) {
+    //       file.progress += parseInt((Math.random() * 10).toFixed(0));
+    //       if (file.progress > 100) file.progress = 100;
+    //     }
+    //   });
+    //   updateDownloadQueue();
+    // }, 1000);
+
+    setInterval(() => {
+      getCloudList();
+      getLocalList();
+    }, 30000);
+
+    getCloudList();
+    updateQueueStatus();
+    updateDownloadQueue();
+  </script>
+</body>
+
+</html>
